@@ -18,6 +18,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Generate random strings of arbitrary length
+# E.g.: $ password=$(random_string 32)
+random_string() { cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c ${1:-16}; }
 
 # Configure OS for DB2
 
@@ -80,10 +83,12 @@ cp /tmp/expc/db2/linuxamd64/samples/db2expc.rsp /tmp/. && chmod a+w /tmp/db2expc
 sed -ri 's/= DECLINE/= ACCEPT/g' /tmp/db2expc.rsp
 
 # Set up password for db2inst1
-sed -ri 's/Replace with your password/db2inst1/g' /tmp/db2expc.rsp
+DB2INST1_PASSWORD=$(random_string)
+sed -i "s/Replace with your password/$DB2INST1_PASSWORD/" /tmp/db2expc.rsp
 
 # Set up password for db2sdfe1 user
-sed -ri 's/\*DB2_INST.FENCED_PASSWORD =/DB2_INST.FENCED_PASSWORD = db2sdfe1/g' /tmp/db2expc.rsp
+DB2SDFE1_PASSWORD=$(random_string)
+sed -Ei "s/^\**DB2_INST.FENCED_PASSWORD\s*=.*$/DB2_INST.FENCED_PASSWORD = $DB2SDFE1_PASSWORD/" /tmp/db2expc.rsp
 
 /tmp/expc/db2setup -r /tmp/db2expc.rsp -l /tmp/db2setup.log
 
